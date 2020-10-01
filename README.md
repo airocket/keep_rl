@@ -3,10 +3,7 @@ Disclaimer: for entertainment only, do not use for trading decisions.
 
 ## Installation
 
-Start docker Postgres + timescale
-```sh
-docker-compose up -d --build
-```
+Start keep_dl https://github.com/airocket/keep_dl
 
 install requirements
 
@@ -15,15 +12,24 @@ pip3 install -r requirements.txt
 ```
 Start
 
+Get models
 ```sh
-python3 main.py
+python3 main_keep_rl.py
 ```
 
-## Usage
+Get trade
+```sh
+python3 main_keep_trade.py
+```
 
-Finished models are located in the model directory. Model building studies are in * .ipynb files.
-The app tries to predict the KEEP-ETH price using market data and data from the eth.
+Optimization hyperparameter 
+```sh
+python3 keep_optuna.py
+```
 
-## Plans for the future
+TensorBoard 
+```sh
+tensorboard --logdir tensorboard_keep
+```
 
-Сollect more historical data and create new models based on them.
+

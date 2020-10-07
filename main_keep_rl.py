@@ -22,6 +22,9 @@ tf.get_logger().setLevel(logging.ERROR)
 
 from KeepTradingEnv_new2 import KeepTradingEnv
 
+n_cpu = 8
+learn_timesteps = 30000
+test_timesteps = 4000
 
 def get_keep_data():
     conn = psycopg2.connect(database="keep_data", user="postgres", password="postgres", host="localhost", port="5432")
@@ -29,16 +32,18 @@ def get_keep_data():
     conn.close()
     return market_data
 
-
+# if load data postgres
 # df = get_keep_data()
 # df = df.sort_values('index')
 # df.drop(['index'], axis=1, inplace=True)
+# df = df.astype(np.float64)
 
+# if load data csv
 df = pd.read_csv('keep_info.csv')
 df.drop(['index'], axis=1, inplace=True)
 df = df.astype(np.float64)
-dfTest = df
 print(df.tail())
+dfTest = df
 
 if __name__ == '__main__':
     def make_envTest(rank, seed=0):
@@ -80,20 +85,15 @@ if __name__ == '__main__':
     print('Imput DataFrame:')
     print(df.head())
     print(df.tail())
+    print("Model params:")
     pprint.pprint(model_params)
-
-    n_cpu = 8
-    learn_timesteps = 30000
-    test_timesteps = 4000
-
     env = SubprocVecEnv([make_env(i) for i in range(n_cpu)])  # задаем колл-во процессоров
     test_env = DummyVecEnv([make_envTest(i) for i in range(1)])
-    policy_kwargs1 = dict(n_lstm=512)
-
+    policy_kwargs = dict(n_lstm=512)
     model = PPO2(MlpLnLstmPolicy, env, nminibatches=1, verbose=1, n_steps=50, tensorboard_log="./tensorboard_keep/")
-    #model = PPO2.load("model/Linux/model_epoch_14.pkl",env, nminibatches=1, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep/", policy_kwargs=policy_kwargs1, **model_params)
+    # if load model begin learn
+    #model = PPO2.load("model/Linux/model_epoch_14.pkl",env, nminibatches=1, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep/", policy_kwargs=policy_kwargs, **model_params)
     model.is_tb_set = True
-
     for n_epoch in range(0, 50):
         summary_writer = tf.compat.v1.summary.FileWriter("./tensorboard_keep/" + "Keep_trade_test_" + str(n_epoch+1))
         print('\x1b[6;30;42m' + '**************  Calculate epoch:', n_epoch, '**************' + '\x1b[0m')

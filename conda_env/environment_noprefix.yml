@@ -353,3 +353,4 @@ dependencies:
     - tensorflow-estimator==1.15.1
     - termcolor==1.1.0
     - typing==3.7.4.3
+prefix: /home/airocket/anaconda3

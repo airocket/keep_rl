@@ -20,13 +20,11 @@ import pandas.io.sql as psql
 import pandas as pd
 from io import StringIO
 from sqlalchemy import create_engine
-from KeepTradingEnv import KeepTradingEnv
-
+from KeepTradingEnv_new2 import KeepTradingEnv
 
 database_name = 'keep_data'
-table_name ='keep_rl_trade'
-engine = create_engine('postgresql://postgres:postgres@localhost:5432/'+database_name)
-
+table_name = 'keep_rl_trade'
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/' + database_name)
 
 
 def get_keep_data():
@@ -75,6 +73,7 @@ if __name__ == '__main__':
             'lam': params['lam'],
         }
 
+
     def psql_insert_copy(table, conn, keys, data_iter):
         dbapi_conn = conn.connection
         with dbapi_conn.cursor() as cur:
@@ -98,22 +97,22 @@ if __name__ == '__main__':
     model_params = get_model_params()
     print(model_params)
 
-    n_cpu = 4
+    n_cpu = 6
 
     env = SubprocVecEnv([make_env(i) for i in range(n_cpu)])  # задаем колл-во процессоров
     test_env = DummyVecEnv([make_envTest(i) for i in range(1)])
 
     # model = PPO2(MlpLnLstmPolicy, env, nminibatches=1, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep/",
     #              **model_params)
-    model = PPO2.load("model/Windows/model_epoch_6.pkl", nminibatches=n_cpu, env=env, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep_trade/")
+    model = PPO2.load("model/Windows/model_epoch_4.pkl", nminibatches=n_cpu, env=env, verbose=1, n_steps=49,
+                      tensorboard_log="./tensorboard_keep_trade/")
     model.is_tb_set = True
 
     for n_epoch in range(0, 1):
-        summary_writer = tf.compat.v1.summary.FileWriter("./tensorboard_keep/" + "Keep_trade_test_" + str(n_epoch+1))
-        print('\x1b[6;30;42m' + '***************************  Calculate epoch:', n_epoch,
-              '***************************' + '\x1b[0m')
+        summary_writer = tf.compat.v1.summary.FileWriter("./tensorboard_keep/" + "Keep_trade_test_" + str(n_epoch + 1))
+        print('\x1b[6;30;42m' + '**************  Calculate epoch:', n_epoch, '**************' + '\x1b[0m')
 
-        #save_s = model.learn(total_timesteps=20000, tb_log_name='Keep_learn')
+        # save_s = model.learn(total_timesteps=20000, tb_log_name='Keep_learn')
 
         zero_completed_obs = np.zeros((n_cpu,) + env.observation_space.shape)
         zero_completed_obs[0, :] = test_env.reset()
@@ -121,29 +120,32 @@ if __name__ == '__main__':
         reward_sum = 0
         all_net_worth_np = np.array([])
         time_test = time.time()
-        save = pd.DataFrame(columns=['time', 'action','reward','keep_price','net_worth','btc_price','eth_price'])
+        save = pd.DataFrame(columns=['time', 'action', 'reward', 'profit', 'keep_price', 'keep_hodl', 'net_worth', 'btc_price', 'eth_price'])
 
         for i in range(200):
             action, states = model.predict(zero_completed_obs, state=state)
             obs, reward, done, info = test_env.step(action)
             zero_completed_obs[0, :] = obs
-
-            keep_price = df_save['close_keep'][i+1]
+            keep_price = df_save['close_keep'][i]
             net_worth_log = info[0]['net_worth']
             action_log = info[0]['action']
+            profit = info[0]['profit']
             reward_log = reward[0]
-
-            print(f"{i} {df_save['index'][i+1]} acttion:{action_log} reward:{reward_log} keep_price:{keep_price} net_worth:{net_worth_log} ")
+            total_hold = info[0]['total_hold']
+            print(f"{i} {df_save['index'][i]} acttion:{action_log} reward:{reward_log} keep_price:{keep_price}"
+                  f" net_worth:{net_worth_log} profit:{profit} ")
             if action_log == 0: acton_t = 'PASS'
             if action_log == 1: acton_t = 'BUY'
             if action_log == 2: acton_t = 'SELL'
-            buf = pd.DataFrame([{'time': df_save['index'][i+1],
+            buf = pd.DataFrame([{'time': df_save['index'][i],
                                  'action': acton_t,
                                  'reward': reward[0],
-                                 'keep_price': df_save['close_keep'][i+1],
+                                 'profit': profit,
+                                 'keep_price': keep_price,
+                                 'keep_hodl': total_hold,
                                  'net_worth': info[0]['net_worth'],
-                                 'btc_price': df_save['close_btc'][i+1],
-                                 'eth_price': df_save['close_eth'][i+1]}])
+                                 'btc_price': df_save['close_btc'][i],
+                                 'eth_price': df_save['close_eth'][i]}])
             save = save.append(buf)
             reward_sum += reward[0]
             if done[0]:
@@ -163,6 +165,5 @@ if __name__ == '__main__':
                 zero_completed_obs[0, :] = test_env.reset()
                 state = None
                 break
-
 
     time.sleep(10)

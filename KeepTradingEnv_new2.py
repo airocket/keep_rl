@@ -30,7 +30,7 @@ class KeepTradingEnv(gym.Env):
         self.action_space = spaces.Discrete(3)
 
         self.observation_space = spaces.Box(
-            low=0, high=1, shape=(1, 41), dtype=np.float32)
+            low=0, high=1, shape=(1, 41), dtype=np.float64)
         self.observations = pd.DataFrame()
         self.scaled_history = pd.DataFrame()
         self.profit = 0
@@ -64,7 +64,7 @@ class KeepTradingEnv(gym.Env):
         history = scaled_history.values[-1]
 
         obs = np.append(obs,history, axis=0)
-        obs = np.reshape(obs.astype('float32'), (1, 41))
+        obs = np.reshape(obs.astype(np.float64), (1, 41))
 
         return obs
 

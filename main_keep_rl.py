@@ -89,10 +89,9 @@ if __name__ == '__main__':
     env = SubprocVecEnv([make_env(i) for i in range(n_cpu)])  # задаем колл-во процессоров
     test_env = DummyVecEnv([make_envTest(i) for i in range(1)])
     policy_kwargs1 = dict(n_lstm=512)
-    #model = PPO2(MlpLnLstmPolicy, env, nminibatches=1, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep/", policy_kwargs=policy_kwargs1, **model_params)
 
-    #model = PPO2(MlpLnLstmPolicy, env, nminibatches=1, verbose=1, n_steps=50, tensorboard_log="./tensorboard_keep/")
-    model = PPO2.load("model/Linux/model_epoch_14.pkl",env, nminibatches=1, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep/", policy_kwargs=policy_kwargs1, **model_params)
+    model = PPO2(MlpLnLstmPolicy, env, nminibatches=1, verbose=1, n_steps=50, tensorboard_log="./tensorboard_keep/")
+    #model = PPO2.load("model/Linux/model_epoch_14.pkl",env, nminibatches=1, verbose=1, n_steps=49, tensorboard_log="./tensorboard_keep/", policy_kwargs=policy_kwargs1, **model_params)
     model.is_tb_set = True
 
     for n_epoch in range(0, 50):

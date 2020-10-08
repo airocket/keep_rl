@@ -31,5 +31,9 @@ TensorBoard
 ```sh
 tensorboard --logdir tensorboard_keep
 ```
-
+Web 
+```sh
+cd web
+python3 main_interface.py
+```
 
